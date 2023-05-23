@@ -4,6 +4,7 @@ import com.capstone.project.domain.user.controller.payload.UserLoginRequest;
 import com.capstone.project.domain.user.controller.payload.UserResponse;
 import com.capstone.project.domain.user.controller.payload.UserSignUpRequest;
 import com.capstone.project.domain.user.service.UserService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,10 +18,11 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
+@SecurityRequirement(name = "bearerAuth")
 public class UserController {
     private final UserService userService;
 
-    @PostMapping("/api/users")
+    @PostMapping("/api/users/register")
     public ModelAndView signUp(@RequestBody UserSignUpRequest request, HttpServletRequest httpServletRequest) {
         userService.signUp(request);
 
@@ -33,7 +35,14 @@ public class UserController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/api/users/login")
     public UserResponse login(@RequestBody UserLoginRequest request) {
+        log.error("HERE");
         UserResponse response = userService.login(request);
+        return response;
+    }
+
+    @PostMapping("/api/users/login-test")
+    public String login() {
+        String response = "132123123";
         return response;
     }
 
