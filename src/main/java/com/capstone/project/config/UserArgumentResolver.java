@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import com.capstone.project.models.User;
 import com.capstone.project.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.MethodParameter;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -17,7 +18,7 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
 import lombok.RequiredArgsConstructor;
-
+@Slf4j
 @RequiredArgsConstructor
 public class UserArgumentResolver implements HandlerMethodArgumentResolver {
     private final UserRepository userRepository;
@@ -44,9 +45,14 @@ public class UserArgumentResolver implements HandlerMethodArgumentResolver {
         String userId = jwt.getName();
         String token = jwt.getToken().getTokenValue();
 
-        return userRepository
+        User user = userRepository
                 .findById(UUID.fromString(userId))
                 .map(it -> it.token(token))
                 .orElseThrow(() -> new BadCredentialsException("Invalid token"));
+
+        if(user.isDeleted()) {
+            throw new BadCredentialsException("User is deactivated");
+        }
+        return user;
     }
 }
