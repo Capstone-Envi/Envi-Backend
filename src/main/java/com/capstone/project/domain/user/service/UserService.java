@@ -1,6 +1,8 @@
 package com.capstone.project.domain.user.service;
 
 import com.capstone.project.config.BearerTokenSupplier;
+import com.capstone.project.domain.user.controller.PaginatedResponse;
+import com.capstone.project.domain.user.controller.PaginationQueryString;
 import com.capstone.project.domain.user.controller.payload.*;
 import com.capstone.project.models.RoleName;
 import com.capstone.project.models.User;
@@ -9,6 +11,8 @@ import com.capstone.project.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
@@ -19,6 +23,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -87,7 +92,20 @@ public class UserService {
     }
 
     @Transactional
-    public User get(UUID id) {
+    public PaginatedResponse<UserResponse> getUsers(PaginationQueryString queryString) {
+        Page<User> users = userRepository
+                .findAll(queryString.getPageable());
+
+        return new PaginatedResponse<UserResponse>(
+                userRepository.count(),
+                users.getContent().stream()
+                .map(user -> new UserResponse(user))
+                .toList()
+        );
+    }
+
+    @Transactional
+    public User getUser(UUID id) {
         return userRepository
                 .findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Can't find user."));

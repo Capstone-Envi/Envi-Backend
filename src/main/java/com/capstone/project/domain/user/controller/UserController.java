@@ -2,6 +2,7 @@ package com.capstone.project.domain.user.controller;
 
 import com.capstone.project.domain.user.controller.payload.*;
 import com.capstone.project.domain.user.service.UserService;
+import com.capstone.project.models.User;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -44,9 +45,18 @@ public class UserController {
         return new UserResponse(userService.getCurrentUser());
     }
 
+    @GetMapping("/api/users")
+    public ResponseEntity<?> getUsers(
+            @RequestParam(value = "offset", required = false, defaultValue = "0") int offset,
+            @RequestParam(value = "limit", required = false, defaultValue = "10") int limit) {
+        PaginationQueryString queryString = new PaginationQueryString(offset, limit);
+        PaginatedResponse<UserResponse> response = userService.getUsers(queryString);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/api/user/{id}/profile")
-    public ResponseEntity<UserResponse> getUser(@PathVariable UUID id, @RequestBody UserProfileUpdateRequest request) {
-        UserResponse response = new UserResponse(userService.get(id));
+    public ResponseEntity<UserResponse> getUser(@PathVariable UUID id) {
+        UserResponse response = new UserResponse(userService.getUser(id));
         return ResponseEntity.ok(response);
     }
 

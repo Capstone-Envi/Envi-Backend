@@ -22,7 +22,7 @@ public class BearerTokenSupplier {
         JwtClaimsSet claimsSet = JwtClaimsSet.builder()
                 .issuer("https://envi-capstone.io")
                 .issuedAt(now)
-                .expiresAt(now.plusSeconds(300))
+                .expiresAt(now.plusSeconds(3000000))
                 .subject(user.id().toString())
                 .build();
 
