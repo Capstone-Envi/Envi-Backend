@@ -14,6 +14,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
@@ -27,6 +28,7 @@ import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @Slf4j
@@ -59,7 +61,7 @@ public class UserService {
 
     private void validateEmail(String email) {
         if (userRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException("Email(`%s`) already exists.".formatted(email));
+            throw new IllegalArgumentException("Email already exists.");
         }
     }
 
@@ -138,28 +140,33 @@ public class UserService {
     }
 
     @Transactional
-    public User sendResetPasswordCode(UUID id) {
+    @Async
+    public CompletableFuture<User> sendResetPasswordCode(String email) {
         User sendResetUser = userRepository
-                .findById(id)
+                .findByEmail(email)
+                .map(user -> {
+                    if (user.isDeleted()) {
+                        throw new IllegalArgumentException(DISABLED_USER);
+                    }
+                    String passwordResetCode = PasswordResetCodeGenerator.generateResetCode();
+                    LocalDateTime expireTime = LocalDateTime.now().plusMinutes(1);
+                    user.expireResetPasswordTime(expireTime);
+                    user.resetPasscode(passwordResetCode);
+                    emailService.sendSimpleMessage(
+                            user.email(),
+                            "RESET PASSWORD CODE",
+                            "Reset code: " + passwordResetCode);
+                    return user;
+                })
                 .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
-        if(sendResetUser.isDeleted()) {
-            throw new IllegalArgumentException(DISABLED_USER);
-        }
-        String passwordResetCode = PasswordResetCodeGenerator.generateResetCode();
-        LocalDateTime expireTime = LocalDateTime.now().plusMinutes(1);
-        sendResetUser.expireResetPasswordTime(expireTime);
-        sendResetUser.resetPasscode(passwordResetCode);
-        emailService.sendSimpleMessage(
-                sendResetUser.email(),
-                "RESET PASSWORD CODE",
-                "Reset code: " + passwordResetCode);
-        return userRepository.save(sendResetUser);
+        return CompletableFuture.completedFuture(userRepository.save(sendResetUser));
     }
 
     @Transactional
-    public User resetPassword(UUID id, UserResetPasswordRequest request) {
+    @Async
+    public CompletableFuture<User> resetPassword(UserResetPasswordRequest request) {
         User resetPasswordUser = userRepository
-                .findById(id)
+                .findByEmail(request.email())
                 .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
 
         if(resetPasswordUser.isDeleted()) {
@@ -174,7 +181,7 @@ public class UserService {
         resetPasswordUser.expireResetPasswordTime(null);
         resetPasswordUser.resetPasscode(null);
         resetPasswordUser.password(passwordEncoder.encode(request.newPassword()));
-        return userRepository.save(resetPasswordUser);
+        return CompletableFuture.completedFuture(userRepository.save(resetPasswordUser));
     }
 
     public User getCurrentUser() {

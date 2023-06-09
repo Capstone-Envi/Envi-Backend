@@ -14,7 +14,7 @@ spring:
     host: smtp.gmail.com
     port: 587
     username: envisystem65@gmail.com
-    password: Envisystem65~1
+    password: nxygcsikvrmbmwkl
     properties:
       mail:
         smtp:

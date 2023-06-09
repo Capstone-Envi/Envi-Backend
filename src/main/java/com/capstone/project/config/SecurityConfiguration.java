@@ -54,7 +54,7 @@ public class SecurityConfiguration {
                                         "/api/user/login")
                                 .permitAll()
                                 .requestMatchers(
-                                        "/api/user/{id}/resetPasscode")
+                                        "/api/user/resetPasscode")
                                 .permitAll()
                                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**")
                                 .permitAll()

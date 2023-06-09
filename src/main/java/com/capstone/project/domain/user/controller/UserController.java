@@ -15,6 +15,7 @@ import org.springframework.web.servlet.View;
 
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,7 +31,7 @@ public class UserController {
         // Redirect to login API to automatically login when signup is complete
         UserLoginRequest loginRequest = new UserLoginRequest(request.email(), request.password());
         httpServletRequest.setAttribute(View.RESPONSE_STATUS_ATTRIBUTE, HttpStatus.TEMPORARY_REDIRECT);
-        return new ModelAndView("redirect:/api/users/login", "user", Map.of("user", loginRequest));
+        return new ModelAndView("redirect:/api/user/login", "user", Map.of("user", loginRequest));
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -78,16 +79,19 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/api/user/{id}/resetPasscode")
-    public ResponseEntity<UserResponse> sendResetPasswordCode(@PathVariable UUID id) {
-        UserResponse response = new UserResponse(userService.sendResetPasswordCode(id));
-        return ResponseEntity.ok(response);
+    @GetMapping("/api/user/resetPasscode")
+    public CompletableFuture<ResponseEntity<UserResponse>> sendResetPasswordCode(@RequestBody String email) {
+        return userService.sendResetPasswordCode(email)
+                .thenApply(user -> {
+                    UserResponse response = new UserResponse(user);
+                    return ResponseEntity.ok(response);
+                });
     }
 
-    @PostMapping("/api/user/{id}/resetPasscode")
-    public ResponseEntity<UserResponse> resetPassword(@PathVariable UUID id, UserResetPasswordRequest request) {
-        UserResponse response = new UserResponse(userService.resetPassword(id, request));
-        return ResponseEntity.ok(response);
+    @PostMapping("/api/user/resetPasscode")
+    public CompletableFuture<ResponseEntity<?>> resetPassword(@RequestBody UserResetPasswordRequest request) {
+        return userService.resetPassword(request)
+                .thenApply(user -> ResponseEntity.ok().build());
     }
 }
 

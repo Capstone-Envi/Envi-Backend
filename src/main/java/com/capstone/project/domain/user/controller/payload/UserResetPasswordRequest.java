@@ -9,6 +9,7 @@ import java.util.Date;
 
 
 public record UserResetPasswordRequest(
+                                String email,
                                 String resetPasscode,
                                 String newPassword
                                 ) {
