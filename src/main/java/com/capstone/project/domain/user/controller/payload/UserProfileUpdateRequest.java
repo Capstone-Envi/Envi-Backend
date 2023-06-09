@@ -1,6 +1,5 @@
 package com.capstone.project.domain.user.controller.payload;
 
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.util.Date;

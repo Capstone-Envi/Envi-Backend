@@ -1,5 +1,4 @@
 package com.capstone.project.models;
-import java.util.Date;
 
 import jakarta.persistence.*;
 
@@ -11,6 +10,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+
+import java.time.LocalDateTime;
+import java.util.Date;
 
 @Entity
 @Getter
@@ -41,6 +43,12 @@ public class User extends BaseModel{
 
     @Column(name = "dateOfBirth")
     private Date dateOfBirth;
+
+    @Column(name = "expireResetPasswordTime")
+    private LocalDateTime expireResetPasswordTime;
+
+    @Column(name = "resetPasscode")
+    private String resetPasscode;
 
     @Transient
     private String token;

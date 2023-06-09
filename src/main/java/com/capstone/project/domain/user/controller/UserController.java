@@ -23,7 +23,7 @@ import java.util.UUID;
 public class UserController {
     private final UserService userService;
 
-    @PostMapping("/api/users/register")
+    @PostMapping("/api/user/register")
     public ModelAndView signUp(@RequestBody UserSignUpRequest request, HttpServletRequest httpServletRequest) {
         userService.signUp(request);
 
@@ -34,14 +34,14 @@ public class UserController {
     }
 
     @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping("/api/users/login")
+    @PostMapping("/api/user/login")
     public UserResponse login(@RequestBody UserLoginRequest request) {
         UserResponse response = userService.login(request);
         return response;
     }
 
-    @PostMapping("/api/users/login-test")
-    public UserResponse login() {
+    @PostMapping("/api/user/login-test")
+    public UserResponse loginTest() {
         return new UserResponse(userService.getCurrentUser());
     }
 
@@ -54,14 +54,20 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/api/user/{id}/profile")
+    @GetMapping("/api/user/{id}/")
     public ResponseEntity<UserResponse> getUser(@PathVariable UUID id) {
         UserResponse response = new UserResponse(userService.getUser(id));
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/api/user/{id}/profile")
-    public ResponseEntity<UserResponse> updateCurrentUser(@PathVariable UUID id, @RequestBody UserProfileUpdateRequest request) {
+    @PostMapping("/api/user/")
+    public ResponseEntity<UserResponse> createUser(@RequestBody UserCreateRequest request) {
+        UserResponse response = new UserResponse(userService.create(request));
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/api/user/{id}/")
+    public ResponseEntity<UserResponse> updateUser(@PathVariable UUID id, @RequestBody UserProfileUpdateRequest request) {
         UserResponse response = new UserResponse(userService.update(id, request));
         return ResponseEntity.ok(response);
     }
@@ -69,6 +75,18 @@ public class UserController {
     @PutMapping("/api/user/{id}/activation")
     public ResponseEntity<UserResponse> updateUserActivation(@PathVariable UUID id, @RequestBody UserActivationRequest request) {
         UserResponse response = new UserResponse(userService.activation(id, request));
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/api/user/{id}/resetPasscode")
+    public ResponseEntity<UserResponse> sendResetPasswordCode(@PathVariable UUID id) {
+        UserResponse response = new UserResponse(userService.sendResetPasswordCode(id));
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/api/user/{id}/resetPasscode")
+    public ResponseEntity<UserResponse> resetPassword(@PathVariable UUID id, UserResetPasswordRequest request) {
+        UserResponse response = new UserResponse(userService.resetPassword(id, request));
         return ResponseEntity.ok(response);
     }
 }

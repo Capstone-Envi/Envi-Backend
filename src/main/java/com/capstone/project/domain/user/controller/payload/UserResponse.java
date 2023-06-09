@@ -3,10 +3,22 @@ package com.capstone.project.domain.user.controller.payload;
 import com.capstone.project.models.RoleName;
 import com.capstone.project.models.User;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.UUID;
 
-public record UserResponse(UUID id, String email, String token, String firstName, String lastName, String phone, Date dateOfBirth, Boolean isDeleted, RoleName role) {
+public record UserResponse(
+        UUID id,
+        String email,
+        String token,
+        String firstName,
+        String lastName,
+        String phone,
+        Date dateOfBirth,
+        Boolean isDeleted,
+        RoleName role,
+        LocalDateTime expireResetPasswordTime,
+        String resetPasscode) {
     public UserResponse(User user) {
         this(user.id(),
                 user.email(),
@@ -16,6 +28,8 @@ public record UserResponse(UUID id, String email, String token, String firstName
                 user.phone(),
                 user.dateOfBirth(),
                 user.isDeleted(),
-                user.role().getName());
+                user.role().getName(),
+                user.expireResetPasswordTime(),
+                user.resetPasscode());
     }
 }

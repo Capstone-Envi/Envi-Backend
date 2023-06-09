@@ -50,16 +50,11 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(
                         requests -> requests
                                 .requestMatchers(HttpMethod.POST,
-                                        "/api/users/register",
-                                        "/api/users/login")
+                                        "/api/user/register",
+                                        "/api/user/login")
                                 .permitAll()
                                 .requestMatchers(
-                                        HttpMethod.GET,
-                                        "/api/articles/{slug}/comments",
-                                        "/api/articles/{slug}",
-                                        "/api/articles",
-                                        "/api/profiles/{username}",
-                                        "/api/tags")
+                                        "/api/user/{id}/resetPasscode")
                                 .permitAll()
                                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**")
                                 .permitAll()
