@@ -1,4 +1,4 @@
-package com.capstone.project.domain.user.controller;
+package com.capstone.project.domain;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

@@ -16,6 +16,7 @@ public record UserCreateRequest(
                                 @Size(max = 30, message = "phone length must less than 30")
                                 String lastName,
                                 String phone,
+                                String address,
                                 Date dateOfBirth,
                                 @NotNull(message = "email can't be null")
                                 @Email(message = "Wrong email format")
@@ -30,6 +31,7 @@ public record UserCreateRequest(
                 .password(password)
                 .firstName(firstName)
                 .lastName(lastName)
+                .address(address)
                 .dateOfBirth(dateOfBirth)
                 .phone(phone)
                 .build();

@@ -1,8 +1,8 @@
 package com.capstone.project.domain.user.service;
 
 import com.capstone.project.config.BearerTokenSupplier;
-import com.capstone.project.domain.user.controller.PaginatedResponse;
-import com.capstone.project.domain.user.controller.PaginationQueryString;
+import com.capstone.project.domain.PaginatedResponse;
+import com.capstone.project.domain.PaginationQueryString;
 import com.capstone.project.domain.user.controller.payload.*;
 import com.capstone.project.models.RoleName;
 import com.capstone.project.models.User;
@@ -14,6 +14,9 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -89,6 +92,7 @@ public class UserService {
         updatedUser.firstName(request.firstName());
         updatedUser.lastName(request.lastName());
         updatedUser.dateOfBirth(request.dateOfBirth());
+        updatedUser.address(request.address());
         updatedUser.phone(request.phone());
         return userRepository.save(updatedUser);
     }
@@ -110,12 +114,16 @@ public class UserService {
     }
 
     @Transactional
-    public PaginatedResponse<UserResponse> getUsers(PaginationQueryString queryString) {
+    public PaginatedResponse<UserResponse> getUsers(PaginationQueryString queryString, String search) {
+        String searchText = search.toLowerCase();
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdDate");
+        Pageable pageable = PageRequest.of(queryString.offset(), queryString.limit(), sort);
+
         Page<User> users = userRepository
-                .findAll(queryString.getPageable());
+                .findAllBySearch(searchText, pageable);
 
         return new PaginatedResponse<UserResponse>(
-                userRepository.count(),
+                userRepository.countBySearch(searchText),
                 users.getContent().stream()
                 .map(UserResponse::new)
                 .toList()

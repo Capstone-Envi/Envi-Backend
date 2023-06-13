@@ -2,17 +2,15 @@ package com.capstone.project.models;
 
 import jakarta.persistence.*;
 
+import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -41,6 +39,9 @@ public class User extends BaseModel{
     @Column(name = "phone")
     private String phone;
 
+    @Column(name = "address")
+    private String address;
+
     @Column(name = "dateOfBirth")
     private Date dateOfBirth;
 
@@ -60,4 +61,16 @@ public class User extends BaseModel{
             nullable = false
     )
     private Role role;
+
+    @ManyToMany
+    @JoinTable(
+            name = "UserNodePermission",
+            joinColumns = @JoinColumn(name = "userId"),
+            inverseJoinColumns = @JoinColumn(name = "nodeId")
+    )
+    private List<Node> nodes = new LinkedList<>();
+
+    @Setter(AccessLevel.NONE)
+    @OneToMany(targetEntity = Notification.class, mappedBy = "user")
+    private List<Notification> notifications;
 }

@@ -2,6 +2,7 @@ package com.capstone.project.config;
 
 import java.time.Instant;
 
+import com.capstone.project.domain.user.controller.payload.UserResponse;
 import com.capstone.project.models.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -24,6 +25,11 @@ public class BearerTokenSupplier {
                 .issuedAt(now)
                 .expiresAt(now.plusSeconds(3000000))
                 .subject(user.id().toString())
+                .claim("email", user.email())
+                .claim("firstName", user.firstName())
+                .claim("lastName", user.lastName())
+                .claim("isDeleted", user.isDeleted())
+                .claim("role", user.role().getName())
                 .build();
 
         JwtEncoderParameters parameters = JwtEncoderParameters.from(claimsSet);

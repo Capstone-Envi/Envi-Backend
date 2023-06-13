@@ -5,6 +5,7 @@ import java.util.List;
 import com.capstone.project.repository.UserRepository;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import lombok.RequiredArgsConstructor;

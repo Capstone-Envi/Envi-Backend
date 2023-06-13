@@ -1,4 +1,4 @@
-package com.capstone.project.domain.user.controller;
+package com.capstone.project.domain;
 
 import java.util.Collection;
 

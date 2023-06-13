@@ -1,3 +1,8 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp"
 INSERT INTO public.role (id, createddate, updateddate, isdeleted, name) VALUES (uuid_generate_v4(), current_timestamp, current_timestamp, false, 'ADMIN');
 INSERT INTO public.role (id, createddate, updateddate, isdeleted, name) VALUES (uuid_generate_v4(), current_timestamp, current_timestamp, false, 'USER');
+INSERT INTO public.role (id, createddate, updateddate, isdeleted, name) VALUES (uuid_generate_v4(), current_timestamp, current_timestamp, false, 'STAFF');
+
+INSERT INTO public.users (id, createddate, updateddate, isdeleted, email, password, firstname, lastname, roleid) VALUES (uuid_generate_v4(), current_timestamp, current_timestamp, false, 'admin@gmail.com', '$2a$10$fzVc63hc/xbONAb3wwQ2V.5BZjbSxlcVPRlbDwyCiIXt5QarMY8uC', 'Thinh', 'Admin', (SELECT id from public.role where name = 'ADMIN'));
+INSERT INTO public.users (id, createddate, updateddate, isdeleted, email, password, firstname, lastname, roleid) VALUES (uuid_generate_v4(), current_timestamp, current_timestamp, false, 'user1@gmail.com', '$2a$10$MYEDfc7b/ceUXXn8ESkWWu8B1ZnWVxpXlRZFdlwBRdTN2cQMmubMS', 'Thinh', 'Customer', (SELECT id from public.role where name = 'USER'));
+INSERT INTO public.users (id, createddate, updateddate, isdeleted, email, password, firstname, lastname, roleid) VALUES (uuid_generate_v4(), current_timestamp, current_timestamp, false, 'staff@gmail.com', '$2a$10$q.Nly5U3.WZ2N6JOJXIU3uC.t5AXG2y9WsAAZLASrqU4jNbgbcPlW', 'Thinh', 'Staff', (SELECT id from public.role where name = 'STAFF'));
