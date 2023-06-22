@@ -30,6 +30,7 @@ public class BearerTokenSupplier {
                 .claim("lastName", user.lastName())
                 .claim("isDeleted", user.isDeleted())
                 .claim("role", user.role().getName())
+                .claim("avatar", user.avatar() != null ? user.avatar() : "")
                 .build();
 
         JwtEncoderParameters parameters = JwtEncoderParameters.from(claimsSet);

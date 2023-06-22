@@ -57,6 +57,12 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/api/users/customer")
+    public ResponseEntity<?> getCustomerRoleUsers() {
+        PaginatedResponse<UserResponse> response = userService.getCustomerRoleUsers();
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/api/user/{id}")
     public ResponseEntity<UserResponse> getUser(@PathVariable UUID id) {
         UserResponse response = new UserResponse(userService.getUser(id));
@@ -75,15 +81,30 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping("/api/user/{id}/avatar")
+    public ResponseEntity<UserResponse> updateUserAvatar(@PathVariable UUID id, @RequestBody UpdateAvatarRequest request) {
+        UserResponse response = new UserResponse(userService.updateAvatar(id, request.avatar()));
+        return ResponseEntity.ok(response);
+    }
+
     @PutMapping("/api/user/{id}/activation")
     public ResponseEntity<UserResponse> updateUserActivation(@PathVariable UUID id, @RequestBody UserActivationRequest request) {
         UserResponse response = new UserResponse(userService.activation(id, request));
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/api/user/resetPasscode")
-    public CompletableFuture<ResponseEntity<UserResponse>> sendResetPasswordCode(@RequestBody String email) {
-        return userService.sendResetPasswordCode(email)
+    @PostMapping("/api/user/updatePassword")
+    public CompletableFuture<ResponseEntity<UserResponse>> updatePassword(@RequestBody UpdatePasswordRequest request) {
+        return userService.updatePassword(request)
+                .thenApply(user -> {
+                    UserResponse response = new UserResponse(user);
+                    return ResponseEntity.ok(response);
+                });
+    }
+
+    @PostMapping("/api/user/sendResetPasscode")
+    public CompletableFuture<ResponseEntity<UserResponse>> sendResetPasswordCode(@RequestBody SendResetPasswordRequest request) {
+        return userService.sendResetPasswordCode(request.email())
                 .thenApply(user -> {
                     UserResponse response = new UserResponse(user);
                     return ResponseEntity.ok(response);

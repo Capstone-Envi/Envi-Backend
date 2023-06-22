@@ -51,6 +51,15 @@ public class User extends BaseModel{
     @Column(name = "resetPasscode")
     private String resetPasscode;
 
+    @Column(name = "avatar")
+    private String avatar;
+
+    @Column(name = "description")
+    private String description;
+
+    @Column(name = "facebookLink")
+    private String facebookLink;
+
     @Transient
     private String token;
 

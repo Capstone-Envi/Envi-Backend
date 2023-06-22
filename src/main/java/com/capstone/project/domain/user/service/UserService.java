@@ -9,14 +9,11 @@ import com.capstone.project.models.User;
 import com.capstone.project.repository.RoleRepository;
 import com.capstone.project.repository.UserRepository;
 import com.capstone.project.service.EmailService;
+import com.capstone.project.utils.ExceptionMessage;
 import com.capstone.project.utils.PasswordResetCodeGenerator;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -29,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -42,10 +40,6 @@ public class UserService {
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
     private final BearerTokenSupplier bearerTokenSupplier;
-
-    private static final String USER_NOT_FOUND = "User not found!";
-    private static final String INVALID_EMAIL_PASSWORD = "Invalid email or password!";
-    private static final String DISABLED_USER = "User is disabled.";
 
     @Transactional
     public User signUp(UserSignUpRequest request) {
@@ -75,12 +69,12 @@ public class UserService {
                 .filter(user -> passwordEncoder.matches(request.password(), user.password()))
                 .map(user -> {
                     if (user.isDeleted()) {
-                        throw new IllegalArgumentException(USER_NOT_FOUND);
+                        throw new IllegalArgumentException(ExceptionMessage.USER_NOT_FOUND);
                     }
                     String token = bearerTokenSupplier.supply(user);
                     return new UserResponse(user.token(token));
                 })
-                .orElseThrow(() -> new IllegalArgumentException(INVALID_EMAIL_PASSWORD));
+                .orElseThrow(() -> new IllegalArgumentException(ExceptionMessage.INVALID_EMAIL_PASSWORD));
     }
 
     @Transactional
@@ -88,12 +82,23 @@ public class UserService {
         User updatedUser = userRepository
                 .findById(id)
                 .filter(user -> !user.isDeleted())
-                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
+                .orElseThrow(() -> new IllegalArgumentException(ExceptionMessage.USER_NOT_FOUND));
         updatedUser.firstName(request.firstName());
         updatedUser.lastName(request.lastName());
         updatedUser.dateOfBirth(request.dateOfBirth());
         updatedUser.address(request.address());
         updatedUser.phone(request.phone());
+        updatedUser.updatedDate(new Date());
+        return userRepository.save(updatedUser);
+    }
+
+    @Transactional
+    public User updateAvatar(UUID id, String avatar) {
+        User updatedUser = userRepository
+                .findById(id)
+                .filter(user -> !user.isDeleted())
+                .orElseThrow(() -> new IllegalArgumentException(ExceptionMessage.USER_NOT_FOUND));
+        updatedUser.avatar(avatar);
         return userRepository.save(updatedUser);
     }
 
@@ -113,20 +118,31 @@ public class UserService {
         return userRepository.save(newUser);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public PaginatedResponse<UserResponse> getUsers(PaginationQueryString queryString, String search) {
         String searchText = search.toLowerCase();
-        Sort sort = Sort.by(Sort.Direction.DESC, "createdDate");
-        Pageable pageable = PageRequest.of(queryString.offset(), queryString.limit(), sort);
 
-        Page<User> users = userRepository
-                .findAllBySearch(searchText, pageable);
+        List<User> users = userRepository
+                .findAllBySearch(searchText);
 
         return new PaginatedResponse<UserResponse>(
                 userRepository.countBySearch(searchText),
-                users.getContent().stream()
+                users.stream()
                 .map(UserResponse::new)
                 .toList()
+        );
+    }
+
+    @Transactional
+    public PaginatedResponse<UserResponse> getCustomerRoleUsers() {
+        List<User> users = userRepository
+                .findAllByRole_name(RoleName.USER);
+
+        return new PaginatedResponse<>(
+                userRepository.countByRole_name(RoleName.USER),
+                users.stream()
+                        .map(UserResponse::new)
+                        .toList()
         );
     }
 
@@ -134,14 +150,14 @@ public class UserService {
     public User getUser(UUID id) {
         return userRepository
                 .findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
+                .orElseThrow(() -> new IllegalArgumentException(ExceptionMessage.USER_NOT_FOUND));
     }
 
     @Transactional
     public User activation(UUID id, UserActivationRequest request) {
         User updatedUser = userRepository
                 .findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
+                .orElseThrow(() -> new IllegalArgumentException(ExceptionMessage.USER_NOT_FOUND));
 
         updatedUser.isDeleted(request.isDeleted());
         return userRepository.save(updatedUser);
@@ -154,10 +170,10 @@ public class UserService {
                 .findByEmail(email)
                 .map(user -> {
                     if (user.isDeleted()) {
-                        throw new IllegalArgumentException(DISABLED_USER);
+                        throw new IllegalArgumentException(ExceptionMessage.DISABLED_USER);
                     }
                     String passwordResetCode = PasswordResetCodeGenerator.generateResetCode();
-                    LocalDateTime expireTime = LocalDateTime.now().plusMinutes(1);
+                    LocalDateTime expireTime = LocalDateTime.now().plusMinutes(2);
                     user.expireResetPasswordTime(expireTime);
                     user.resetPasscode(passwordResetCode);
                     emailService.sendSimpleMessage(
@@ -166,7 +182,7 @@ public class UserService {
                             "Reset code: " + passwordResetCode);
                     return user;
                 })
-                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
+                .orElseThrow(() -> new IllegalArgumentException(ExceptionMessage.USER_NOT_FOUND));
         return CompletableFuture.completedFuture(userRepository.save(sendResetUser));
     }
 
@@ -175,10 +191,10 @@ public class UserService {
     public CompletableFuture<User> resetPassword(UserResetPasswordRequest request) {
         User resetPasswordUser = userRepository
                 .findByEmail(request.email())
-                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
+                .orElseThrow(() -> new IllegalArgumentException(ExceptionMessage.USER_NOT_FOUND));
 
         if(resetPasswordUser.isDeleted()) {
-            throw new IllegalArgumentException(DISABLED_USER);
+            throw new IllegalArgumentException(ExceptionMessage.DISABLED_USER);
         }
         if(LocalDateTime.now().isAfter(resetPasswordUser.expireResetPasswordTime())) {
             throw new IllegalArgumentException("Expired passcode.");
@@ -202,16 +218,25 @@ public class UserService {
         String userId = jwt.getName();
         return userRepository
                 .findById(UUID.fromString(userId))
-                .orElseThrow(() -> new BadCredentialsException(USER_NOT_FOUND));
+                .orElseThrow(() -> new BadCredentialsException(ExceptionMessage.USER_NOT_FOUND));
     }
 
-//
-//    private void updatePassword(User user, UpdateUserRequest request) {
-//        String password = request.password();
-//        if (password != null && !password.isBlank()) {
-//            String encoded = passwordEncoder.encode(password);
-//            user.password(encoded);
-//        }
-//    }
+    @Transactional
+    public CompletableFuture<User> updatePassword(UpdatePasswordRequest request) {
+        User updatePasswordUser = userRepository
+                .findByEmail(request.email())
+                .orElseThrow(() -> new IllegalArgumentException(ExceptionMessage.USER_NOT_FOUND));
+        if(updatePasswordUser.isDeleted()) {
+            throw new IllegalArgumentException(ExceptionMessage.DISABLED_USER);
+        }
+        if(!passwordEncoder.matches(request.oldPassword(), updatePasswordUser.password())) {
+            throw new IllegalArgumentException("Current password doesn't match");
+        }
+        if(request.oldPassword().equals(request.newPassword())) {
+            throw new IllegalArgumentException("New password can't be the same as current password");
+        }
+        updatePasswordUser.password(passwordEncoder.encode(request.newPassword()));
+        return CompletableFuture.completedFuture(userRepository.save(updatePasswordUser));
+    }
 }
 

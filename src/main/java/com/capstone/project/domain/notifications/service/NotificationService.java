@@ -5,7 +5,7 @@ import com.capstone.project.domain.PaginationQueryString;
 import com.capstone.project.domain.notifications.controller.payload.NotificationResponse;
 import com.capstone.project.models.Notification;
 import com.capstone.project.repository.NotificationRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;

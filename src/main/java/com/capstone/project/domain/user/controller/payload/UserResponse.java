@@ -19,7 +19,8 @@ public record UserResponse(
         Boolean isDeleted,
         RoleName role,
         LocalDateTime expireResetPasswordTime,
-        String resetPasscode) {
+        String resetPasscode,
+        String avatar) {
     public UserResponse(User user) {
         this(user.id(),
                 user.email(),
@@ -32,6 +33,7 @@ public record UserResponse(
                 user.isDeleted(),
                 user.role().getName(),
                 user.expireResetPasswordTime(),
-                user.resetPasscode());
+                user.resetPasscode(),
+                user.avatar());
     }
 }

@@ -14,17 +14,17 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Table(name = "sensorperiodicdata")
 @Accessors(fluent = true, chain = true)
 @EntityListeners(AuditingEntityListener.class)
-public class SensorPeriodicData extends BaseModel{
-    public static final String FK_PERIODICDATA_SENSOR = "fk_Periodicdata_Sensor";
+public class SensorPeriodicData extends SensorDataBaseModel{
+    public static final String FK_PERIODIC_DATA_SENSOR = "fk_Periodic_data_Sensor";
 
     @ManyToOne
     @JoinColumn(
-            foreignKey = @ForeignKey(name = SensorPeriodicData.FK_PERIODICDATA_SENSOR),
+            foreignKey = @ForeignKey(name = SensorPeriodicData.FK_PERIODIC_DATA_SENSOR),
             name = "sensorId", referencedColumnName = "id",
             nullable = false
     )
     private Sensor sensor;
 
     @Column(name = "data")
-    private String data;
+    private double data;
 }
