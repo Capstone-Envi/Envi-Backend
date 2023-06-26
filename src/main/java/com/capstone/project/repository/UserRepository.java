@@ -26,6 +26,10 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Query("SELECT COUNT(n) FROM User n WHERE CONCAT(n.email, n.firstName, n.lastName) LIKE %?1%")
     long countBySearch(String searchText);
 
-    List<User> findAllByRole_name(RoleName name);
+    @Query("SELECT u FROM User u JOIN u.role r WHERE (LOWER(CONCAT(u.email, u.firstName, u.lastName)) LIKE %?1%) AND r.name = ?2 ORDER BY u.createdDate ASC")
+    List<User> findAllBySearchAndRoleName(String searchText, RoleName roleName);
     long countByRole_name(RoleName name);
+
+    @Query("SELECT COUNT(u) FROM User u JOIN u.role r WHERE (LOWER(CONCAT(u.email, u.firstName, u.lastName)) LIKE %?1%) AND r.name = ?2")
+    long countAllBySearchAndRoleName(String searchText, RoleName roleName);
 }

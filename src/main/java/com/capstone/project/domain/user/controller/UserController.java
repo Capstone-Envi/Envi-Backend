@@ -58,8 +58,8 @@ public class UserController {
     }
 
     @GetMapping("/api/users/customer")
-    public ResponseEntity<?> getCustomerRoleUsers() {
-        PaginatedResponse<UserResponse> response = userService.getCustomerRoleUsers();
+    public ResponseEntity<?> getCustomerRoleUsers(@RequestParam(value = "search", required = false, defaultValue = "") String search) {
+        PaginatedResponse<UserResponse> response = userService.getCustomerRoleUsers(search);
         return ResponseEntity.ok(response);
     }
 

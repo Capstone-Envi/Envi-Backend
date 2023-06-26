@@ -120,7 +120,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public PaginatedResponse<UserResponse> getUsers(PaginationQueryString queryString, String search) {
-        String searchText = search.toLowerCase();
+        String searchText = search.toLowerCase().replaceAll("\\s", "");;
 
         List<User> users = userRepository
                 .findAllBySearch(searchText);
@@ -134,12 +134,13 @@ public class UserService {
     }
 
     @Transactional
-    public PaginatedResponse<UserResponse> getCustomerRoleUsers() {
+    public PaginatedResponse<UserResponse> getCustomerRoleUsers(String search) {
+        String searchText = search.toLowerCase().replaceAll("\\s", "");;
         List<User> users = userRepository
-                .findAllByRole_name(RoleName.USER);
+                .findAllBySearchAndRoleName(searchText, RoleName.USER);
 
         return new PaginatedResponse<>(
-                userRepository.countByRole_name(RoleName.USER),
+                userRepository.countAllBySearchAndRoleName(searchText, RoleName.USER),
                 users.stream()
                         .map(UserResponse::new)
                         .toList()
