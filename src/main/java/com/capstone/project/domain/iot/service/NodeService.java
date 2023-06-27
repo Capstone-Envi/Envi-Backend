@@ -4,7 +4,6 @@ import com.capstone.project.domain.PaginatedResponse;
 import com.capstone.project.domain.PaginationQueryString;
 import com.capstone.project.domain.iot.controller.payload.*;
 import com.capstone.project.domain.user.controller.payload.UserResponse;
-import com.capstone.project.domain.user.service.UserService;
 import com.capstone.project.models.*;
 import com.capstone.project.repository.NodeRepository;
 import com.capstone.project.repository.UserRepository;
@@ -12,7 +11,6 @@ import com.capstone.project.utils.ExceptionMessage;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -36,7 +34,7 @@ public class NodeService {
             PaginationQueryString queryString) {
         if (currentUser.role().getName().equals(RoleName.USER)) {
             Page<Node> nodes = nodeRepository
-                    .findAllByUsers_Id_OrderByNodeId(currentUser.id(), queryString.getPageable());
+                    .findAllByUsers_Id_OrderByNodeCode(currentUser.id(), queryString.getPageable());
 
             return CompletableFuture.completedFuture(new PaginatedResponse<>(
                     nodeRepository.countByUsers_Id(currentUser.id()),
@@ -64,7 +62,7 @@ public class NodeService {
 
     @Transactional
     public CompletableFuture<NodeResponse> createNode(NodeCreateRequest request) {
-        this.validateNodeId(request.nodeId());
+        this.validateNodeCode(request.nodeCode());
         Node newNode = request.toNode();
         newNode.createdDate(new Date());
         newNode.updatedDate(new Date());
@@ -122,9 +120,9 @@ public class NodeService {
         return CompletableFuture.completedFuture(null);
     }
 
-    private void validateNodeId(String nodeId) {
-        if (nodeRepository.existsByNodeId(nodeId)) {
-            throw new IllegalArgumentException("NodeId already exists.");
+    private void validateNodeCode(String nodeCode) {
+        if (nodeRepository.existsByNodeCode(nodeCode)) {
+            throw new IllegalArgumentException("NodeCode already exists.");
         }
     }
 }

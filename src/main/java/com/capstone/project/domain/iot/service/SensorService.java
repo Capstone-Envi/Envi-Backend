@@ -37,7 +37,7 @@ public class SensorService {
                 .orElseThrow(() -> new IllegalArgumentException(ExceptionMessage.NODE_NOT_FOUND));
 
         List<Sensor> sensors = existNode.sensors();
-        sensors.sort(Comparator.comparing(Sensor::sensorId));
+        sensors.sort(Comparator.comparing(Sensor::sensorCode));
         return CompletableFuture.completedFuture(new PaginatedResponse<>(
                 sensors.size(),
                 sensors.stream().map(SensorResponse::new).toList()
@@ -54,15 +54,15 @@ public class SensorService {
         if (currentUser.role().getName().equals(RoleName.USER)) {
             if (type != null) {
                 sensors = sensorRepository
-                        .findByNode_Users_IdAndTypeOrderBySensorId(currentUser.id(), type, queryString.getPageable());
+                        .findByNode_Users_IdAndTypeOrderBySensorCode(currentUser.id(), type, queryString.getPageable());
                 count = sensorRepository.countByNode_Users_IdAndType(currentUser.id(), type);
             } else {
                 sensors = sensorRepository
-                        .findByNode_Users_IdOrderBySensorId(currentUser.id(), queryString.getPageable());
+                        .findByNode_Users_IdOrderBySensorCode(currentUser.id(), queryString.getPageable());
                 count = sensorRepository.countByNode_Users_Id(currentUser.id());
             }
         } else {
-            sensors = sensorRepository.findAllByOrderBySensorId(queryString.getPageable());
+            sensors = sensorRepository.findAllByOrderBySensorCode(queryString.getPageable());
             count = sensorRepository.count();
         }
 
@@ -124,7 +124,7 @@ public class SensorService {
         if (existNode.sensors().size() >= 4) {
             throw new IllegalArgumentException(ExceptionMessage.MAXIMUM_NODE_SENSOR_ERROR);
         }
-        this.validateSensorId(request.sensorId());
+        this.validateSensorCode(request.sensorCode());
         Sensor newSensor = request.toSensor();
         newSensor.createdDate(new Date());
         newSensor.updatedDate(new Date());
@@ -174,9 +174,9 @@ public class SensorService {
         return CompletableFuture.completedFuture(null);
     }
 
-    private void validateSensorId(String sensorId) {
-        if (sensorRepository.existsBySensorId(sensorId)) {
-            throw new IllegalArgumentException("SensorId already exists.");
+    private void validateSensorCode(String sensorCode) {
+        if (sensorRepository.existsBySensorCode(sensorCode)) {
+            throw new IllegalArgumentException("SensorCode already exists.");
         }
     }
 }

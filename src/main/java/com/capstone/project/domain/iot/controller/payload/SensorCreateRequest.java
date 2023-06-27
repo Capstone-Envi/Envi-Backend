@@ -4,7 +4,7 @@ import com.capstone.project.models.Sensor;
 import com.capstone.project.models.SensorType;
 
 public record SensorCreateRequest(
-        String sensorId,
+        String sensorCode,
         float minThreshold,
         float maxThreshold,
         SensorType type,
@@ -16,7 +16,7 @@ public record SensorCreateRequest(
         ) {
     public Sensor toSensor() {
         return Sensor.builder()
-                .sensorId(sensorId)
+                .sensorCode(sensorCode)
                 .minThreshold(minThreshold)
                 .maxThreshold(maxThreshold)
                 .type(type)

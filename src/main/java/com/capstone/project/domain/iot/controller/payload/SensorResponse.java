@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public record SensorResponse(
         UUID id,
-        String sensorId,
+        String sensorCode,
         float minThreshold,
         float maxThreshold,
         SensorType type,
@@ -23,7 +23,7 @@ public record SensorResponse(
     public SensorResponse(Sensor sensor) {
         this(
                 sensor.id(),
-                sensor.sensorId(),
+                sensor.sensorCode(),
                 sensor.minThreshold(),
                 sensor.maxThreshold(),
                 sensor.type(),

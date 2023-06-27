@@ -28,8 +28,8 @@ public class Sensor extends BaseModel{
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     private UUID id;
 
-    @Column(name = "sensorId", unique = true)
-    private String sensorId;
+    @Column(name = "sensorCode", unique = true)
+    private String sensorCode;
 
     @Column(name = "minThreshold")
     private float minThreshold;

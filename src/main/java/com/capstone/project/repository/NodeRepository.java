@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.UUID;
 
 public interface NodeRepository extends JpaRepository<Node, UUID> {
-    boolean existsByNodeId(String nodeId);
-    Page<Node> findAllByUsers_Id_OrderByNodeId(UUID userId, Pageable pageable);
+    boolean existsByNodeCode(String nodeId);
+    Page<Node> findAllByUsers_Id_OrderByNodeCode(UUID userId, Pageable pageable);
     long countByUsers_Id(UUID userId);
 }

@@ -8,13 +8,13 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-public record NodeWithUsersResponse(UUID id, String nodeId, String name,
+public record NodeWithUsersResponse(UUID id, String nodeCode, String name,
                                     String description, Date createdDate,
                                     Date updatedDate, List<UserResponse> users) {
     public NodeWithUsersResponse(Node node) {
         this(
                 node.id(),
-                node.nodeId(),
+                node.nodeCode(),
                 node.name(),
                 node.description(),
                 node.createdDate(),

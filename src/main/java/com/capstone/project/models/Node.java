@@ -26,8 +26,8 @@ public class Node{
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     private UUID id;
 
-    @Column(name = "nodeId", unique = true)
-    private String nodeId;
+    @Column(name = "nodeCode", unique = true)
+    private String nodeCode;
 
     @Column(name = "name")
     private String name;

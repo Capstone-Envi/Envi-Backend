@@ -3,13 +3,13 @@ package com.capstone.project.domain.iot.controller.payload;
 import com.capstone.project.models.Node;
 
 public record NodeCreateRequest(
-        String nodeId,
+        String nodeCode,
         String name,
         String description
         ) {
     public Node toNode() {
         return Node.builder()
-                .nodeId(nodeId)
+                .nodeCode(nodeCode)
                 .name(name)
                 .description(description)
                 .build();
