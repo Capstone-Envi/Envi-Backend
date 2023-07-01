@@ -47,10 +47,10 @@ public class Node{
     private List<User> users = new LinkedList<>();
 
     @Setter(AccessLevel.NONE)
-    @OneToMany(targetEntity = Notification.class, mappedBy = "node")
+    @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true, targetEntity = Notification.class, mappedBy = "node")
     private List<Notification> notifications;
 
     @Setter(AccessLevel.NONE)
-    @OneToMany(targetEntity = Sensor.class, mappedBy = "node")
+    @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true, targetEntity = Sensor.class, mappedBy = "node")
     private List<Sensor> sensors;
 }

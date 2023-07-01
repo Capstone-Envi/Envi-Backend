@@ -72,10 +72,10 @@ public class Sensor extends BaseModel{
     private Node node;
 
     @Setter(AccessLevel.NONE)
-    @OneToMany(targetEntity = SensorPeriodicData.class, mappedBy = "sensor")
+    @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true, targetEntity = SensorPeriodicData.class, mappedBy = "sensor")
     private List<SensorPeriodicData> sensorPeriodicData;
 
     @Setter(AccessLevel.NONE)
-    @OneToMany(targetEntity = SensorIntervalData.class, mappedBy = "sensor")
+    @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true, targetEntity = SensorIntervalData.class, mappedBy = "sensor")
     private List<SensorIntervalData> sensorIntervalData;
 }

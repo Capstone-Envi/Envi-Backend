@@ -18,7 +18,9 @@ public record SensorResponse(
         float interval,
         String location,
         Date createdDate,
-        Date updatedDate
+        Date updatedDate,
+        String nodeBelongName,
+        String nodeBelongCode
         ) {
     public SensorResponse(Sensor sensor) {
         this(
@@ -33,6 +35,8 @@ public record SensorResponse(
                 sensor.interval(),
                 sensor.location(),
                 sensor.createdDate(),
-                sensor.updatedDate());
+                sensor.updatedDate(),
+                sensor.node().name(),
+                sensor.node().nodeCode());
     }
 }

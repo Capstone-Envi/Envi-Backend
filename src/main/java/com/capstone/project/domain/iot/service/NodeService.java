@@ -6,6 +6,7 @@ import com.capstone.project.domain.iot.controller.payload.*;
 import com.capstone.project.domain.user.controller.payload.UserResponse;
 import com.capstone.project.models.*;
 import com.capstone.project.repository.NodeRepository;
+import com.capstone.project.repository.SensorRepository;
 import com.capstone.project.repository.UserRepository;
 import com.capstone.project.utils.ExceptionMessage;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,7 @@ import java.util.concurrent.CompletableFuture;
 public class NodeService {
     private final NodeRepository nodeRepository;
     private final UserRepository userRepository;
+    private final SensorRepository sensorRepository;
 
     @Transactional(readOnly = true)
     @Async
@@ -116,6 +118,11 @@ public class NodeService {
 
     @Transactional
     public CompletableFuture<Void> deleteNode(UUID id) {
+        Node existNode = nodeRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException(ExceptionMessage.NODE_NOT_FOUND));
+        existNode.sensors().stream().forEach(item -> {
+            sensorRepository.deleteById(item.id());
+        });
         nodeRepository.deleteById(id);
         return CompletableFuture.completedFuture(null);
     }
