@@ -78,8 +78,4 @@ public class User extends BaseModel{
             inverseJoinColumns = @JoinColumn(name = "nodeId")
     )
     private List<Node> nodes = new LinkedList<>();
-
-    @Setter(AccessLevel.NONE)
-    @OneToMany(targetEntity = Notification.class, mappedBy = "user")
-    private List<Notification> notifications;
 }

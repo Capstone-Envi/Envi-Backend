@@ -33,3 +33,7 @@ decorator:
       enable-logging: true
 mqtt:
   broker: localhost
+twilio:
+  accountSid: AC93708e751949a6cc185ec63272b9cf36
+  authToken: fa3cfde519f3ee7b735f9c578e18255d
+  phone: +15419398312

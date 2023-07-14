@@ -10,10 +10,13 @@ import com.capstone.project.models.User;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -52,6 +55,21 @@ public class SensorController {
     @GetMapping("/api/sensor/{sensorId}/data/interval")
     public CompletableFuture<ResponseEntity<SensorListDataResponse>> getSensorIntervalData(@PathVariable UUID sensorId) {
         return sensorService.getSensorIntervalData(sensorId)
+                .thenApply(ResponseEntity::ok);
+    }
+
+    @GetMapping("/api/v2/sensor/{sensorId}/data/interval")
+    public CompletableFuture<ResponseEntity<SensorDataVer2Response>> getSensorIntervalDataVer2(@PathVariable UUID sensorId) {
+        return sensorService.getSensorIntervalDataV2(sensorId)
+                .thenApply(ResponseEntity::ok);
+    }
+
+    @GetMapping("/api/sensor/type/{sensorType}/data/interval")
+    public CompletableFuture<ResponseEntity<Map<String, SensorListDataResponse>>> getSensorOfTypeIntervalData(
+            @PathVariable SensorType sensorType,
+            @RequestParam(value = "startDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")Date startDate,
+            @RequestParam(value = "endDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssXXX") Date endDate) {
+        return sensorService.getSensorOfTypeIntervalData(sensorType, startDate, endDate)
                 .thenApply(ResponseEntity::ok);
     }
 

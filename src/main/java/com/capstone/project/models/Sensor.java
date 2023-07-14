@@ -78,4 +78,8 @@ public class Sensor extends BaseModel{
     @Setter(AccessLevel.NONE)
     @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true, targetEntity = SensorIntervalData.class, mappedBy = "sensor")
     private List<SensorIntervalData> sensorIntervalData;
+
+    @Setter(AccessLevel.NONE)
+    @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true, targetEntity = Alert.class, mappedBy = "sensor")
+    private List<Alert> alerts;
 }

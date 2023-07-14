@@ -2,6 +2,7 @@ package com.capstone.project.domain.iot.mqtt;
 
 import java.sql.Timestamp;
 
+import com.capstone.project.domain.iot.service.SensorService;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -11,6 +12,7 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -21,13 +23,14 @@ public class MQTTSubscriber extends MqttConfig implements MqttCallback, MQTTSubs
     private String brokerUrl = null;
     final private String colon = ":";
     final private String clientId = "enviBackendSubscriber";
-
     private MqttClient mqttClient = null;
     private MqttConnectOptions connectionOptions = null;
     private MemoryPersistence persistence = null;
+    private final SensorService sensorService;
 
-    public MQTTSubscriber(@Value("${mqtt.broker}") String broker) {
+    public MQTTSubscriber(@Value("${mqtt.broker}") String broker, SensorService sensorService) {
         this.broker = broker;
+        this.sensorService = sensorService;
         this.config();
     }
 
@@ -54,12 +57,18 @@ public class MQTTSubscriber extends MqttConfig implements MqttCallback, MQTTSubs
         // Called when a message arrives from the server that matches any
         // subscription made by the client
         String time = new Timestamp(System.currentTimeMillis()).toString();
+        String receivedMessage = new String(message.getPayload());
         System.out.println();
         System.out.println("***********************************************************************");
         System.out.println("Message Arrived at Time: " + time + "  Topic: " + topic + "  Message: "
-                + new String(message.getPayload()));
+                + receivedMessage);
         System.out.println("***********************************************************************");
         System.out.println();
+        try {
+            sensorService.processReceiveMessage(receivedMessage);
+        } catch (Exception e) {
+            log.error("Error processing message: " + e.getMessage());
+        }
     }
 
     /*

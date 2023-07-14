@@ -4,10 +4,8 @@ import com.capstone.project.domain.PaginatedResponse;
 import com.capstone.project.domain.PaginationQueryString;
 import com.capstone.project.domain.iot.controller.payload.*;
 import com.capstone.project.models.*;
-import com.capstone.project.repository.NodeRepository;
-import com.capstone.project.repository.SensorIntervalDataRepository;
-import com.capstone.project.repository.SensorPeriodicDataRepository;
-import com.capstone.project.repository.SensorRepository;
+import com.capstone.project.repository.*;
+import com.capstone.project.service.SmsService;
 import com.capstone.project.utils.ExceptionMessage;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +28,8 @@ public class SensorService {
     private final SensorIntervalDataRepository sensorIntervalDataRepository;
     private final SensorPeriodicDataRepository sensorPeriodicDataRepository;
     private final EntityManager entityManager;
+    private final SmsService smsService;
+    private final AlertRepository alertRepository;
 
     @Transactional(readOnly = true)
     public CompletableFuture<PaginatedResponse<SensorResponse>> getSensorsByNodeId(UUID nodeId) {
@@ -42,6 +42,84 @@ public class SensorService {
                 sensors.size(),
                 sensors.stream().map(SensorResponse::new).toList()
         ));
+    }
+
+    @Transactional
+    public CompletableFuture<Void> processReceiveMessage(String receivedMessage) {
+        String[] processMessage = receivedMessage.split(",");
+        if (processMessage.length == 0) {
+            return CompletableFuture.completedFuture(null);
+        }
+        String nodeCode = processMessage[0];
+        Node existNode = nodeRepository.findByNodeCode(nodeCode)
+                .orElseThrow(() -> new IllegalArgumentException(ExceptionMessage.NODE_NOT_FOUND));
+        for (int i = 1; i < processMessage.length; i++) {
+            String[] sensorData = processMessage[i].split(":");
+            if (sensorData.length == 2) {
+                String sensorCode = sensorData[0];
+                double value = Double.parseDouble(sensorData[1]);
+
+                Sensor matchingSensor = existNode.sensors()
+                        .stream()
+                        .filter(sensor -> sensor.sensorCode().equals(sensorCode))
+                        .findFirst()
+                        .orElse(null);
+
+                if (matchingSensor != null) {
+                    Date currentTime = new Date();
+                    if (value < matchingSensor.minThreshold() || value > matchingSensor.maxThreshold()) {
+                        String messageSensorType = getMessageSensorType(matchingSensor);
+                        String messageHighLow = "Too High";
+                        String messageTemplate = "Sensor " + matchingSensor.sensorCode() + " " + messageSensorType + " has reach " + value + " with limit of [" + matchingSensor.minThreshold() + " ; " + matchingSensor.maxThreshold() + "] " + messageHighLow;
+                        Alert alert = Alert.builder()
+                                .sensor(matchingSensor)
+                                .content(messageTemplate)
+                                .isRead(false)
+                                .build();
+                        alert.createdDate(new Date());
+                        alert.updatedDate(new Date());
+                        alertRepository.save(alert);
+                        matchingSensor.node().users().forEach(user -> {
+                            if (user.phone() != null) {
+//                                 smsService.sendSMS("+84" + user.phone(), messageTemplate);
+                                log.info("Send SMS to " + user.phone() + " with message: " + messageTemplate);
+                            }
+                        });
+                    }
+
+                    SensorIntervalData newData = new SensorIntervalData();
+                    newData.data(value);
+                    newData.createTimestamp(currentTime);
+                    newData.sensor(matchingSensor);
+                    sensorIntervalDataRepository.save(newData);
+                } else {
+                    log.error("Error: Sensor with code " + sensorCode + " not found.");
+                }
+            } else {
+                log.error("Error: Invalid sensor data entry: " + processMessage[i]);
+            }
+        }
+        return CompletableFuture.completedFuture(null);
+    }
+
+    public String getMessageSensorType(Sensor sensor) {
+        switch (sensor.type()) {
+            case TEMPERATURE -> {
+                return "Temperature";
+            }
+            case HUMIDITY -> {
+                return "Humidity Level";
+            }
+            case LIGHT -> {
+                return "Light Intensity";
+            }
+            case SMOKE -> {
+                return "Smoke Density";
+            }
+            default -> {
+                return "Unknown Sensor Type";
+            }
+        }
     }
 
     @Transactional(readOnly = true)
@@ -82,6 +160,37 @@ public class SensorService {
     }
 
     @Transactional(readOnly = true)
+    public CompletableFuture<Map<String, SensorListDataResponse>> getSensorOfTypeIntervalData(SensorType sensorType, Date startDate, Date endDate) {
+        try (Stream<SensorIntervalData> intervalDatas = Optional.ofNullable(startDate)
+                .flatMap(s -> Optional.ofNullable(endDate)
+                        .map(e -> sensorIntervalDataRepository.findAllByCreateTimestampBetweenAndSensor_TypeOrderByCreateTimestampAsc(startDate, endDate, sensorType)))
+                .orElseGet(() -> sensorIntervalDataRepository.findAllBySensor_TypeOrderByCreateTimestampAsc(sensorType))) {
+            Map<String, SensorListDataResponse> responsesByType = new HashMap<>();
+            intervalDatas.forEach(data -> {
+                String sensorCode = data.sensor().sensorCode();
+                SensorListDataResponse response = responsesByType.computeIfAbsent(sensorCode, k -> new SensorListDataResponse());
+                response.add(data);
+                entityManager.detach(data);
+            });
+            return CompletableFuture.completedFuture(responsesByType);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public CompletableFuture<Map<String, SensorListDataResponse>> getSensorOfTypeIntervalDataVer2(SensorType sensorType) {
+        try (Stream<SensorIntervalData> intervalDatas = sensorIntervalDataRepository.findAllBySensor_TypeOrderByCreateTimestampAsc(sensorType)) {
+            Map<String, SensorListDataResponse> responsesByType = new HashMap<>();
+            intervalDatas.forEach(data -> {
+                String sensorCode = data.sensor().sensorCode();
+                SensorListDataResponse response = responsesByType.computeIfAbsent(sensorCode, k -> new SensorListDataResponse());
+                response.add(data);
+                entityManager.detach(data);
+            });
+            return CompletableFuture.completedFuture(responsesByType);
+        }
+    }
+
+    @Transactional(readOnly = true)
     public CompletableFuture<SensorListDataResponse> getSensorIntervalData(UUID id) {
         SensorListDataResponse responses = new SensorListDataResponse();
         try (Stream<SensorIntervalData> intervalDatas = sensorIntervalDataRepository.findAllBySensor_IdOrderByCreateTimestampAsc(id)) {
@@ -90,6 +199,33 @@ public class SensorService {
                 entityManager.detach(data);
             });
             return CompletableFuture.completedFuture(responses);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public CompletableFuture<SensorDataVer2Response> getSensorIntervalDataV2(UUID id) {
+        List<double[]> responses = new ArrayList<>();
+        double[] minMax = { Double.MAX_VALUE, Double.MIN_VALUE };
+        double[] sumCount = { 0, 0 };
+        try (Stream<SensorIntervalData> intervalDatas = sensorIntervalDataRepository.findAllBySensor_IdOrderByCreateTimestampAsc(id)) {
+            intervalDatas.forEach(data -> {
+                double[] responseData = new double[2];
+                responseData[0] = data.createTimestamp().getTime();
+                responseData[1] = data.data();
+                // Update min and max values
+                minMax[0] = Math.min(minMax[0], responseData[1]);
+                minMax[1] = Math.max(minMax[1], responseData[1]);
+                // Accumulate sum and count
+                sumCount[0] += responseData[1];
+                sumCount[1]++;
+                responses.add(responseData);
+                entityManager.detach(data);
+            });
+            double average = sumCount[1] > 0 ? Math.floor((sumCount[0] / sumCount[1]) * 100) / (100.0)  : 0;
+            double finalMin = sumCount[1] > 0 ? Math.floor(minMax[0] * 100) / (100.0) : 0;
+            double finalMax = sumCount[1] > 0 ? Math.floor(minMax[1] * 100) / (100.0) : 0;
+            SensorDataVer2Response sensorDataVerResponse = new SensorDataVer2Response(responses, finalMin, finalMax, average);
+            return CompletableFuture.completedFuture(sensorDataVerResponse);
         }
     }
 
@@ -121,6 +257,11 @@ public class SensorService {
     public CompletableFuture<SensorResponse> createSensor(UUID id, SensorCreateRequest request) {
         Node existNode = nodeRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(ExceptionMessage.NODE_NOT_FOUND));
+        boolean sensorExists = existNode.sensors().stream()
+                .anyMatch(sensor -> sensor.type().equals(request.type()));
+        if (sensorExists) {
+            throw new IllegalArgumentException("A sensor with the same type already exists in the node.");
+        }
         if (existNode.sensors().size() >= 4) {
             throw new IllegalArgumentException(ExceptionMessage.MAXIMUM_NODE_SENSOR_ERROR);
         }
@@ -156,7 +297,7 @@ public class SensorService {
         Sensor updatedSensor = sensorRepository
                 .findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(ExceptionMessage.SENSOR_NOT_FOUND));
-        if(request.min() > request.max()) {
+        if (request.min() > request.max()) {
             throw new IllegalArgumentException(ExceptionMessage.INVALID_THRESHOLD);
         }
         updatedSensor.minThreshold(request.min());

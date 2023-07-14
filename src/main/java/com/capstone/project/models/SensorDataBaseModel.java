@@ -22,7 +22,7 @@ public abstract class SensorDataBaseModel {
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     private UUID id;
 
-    @Column(name = "createTimestamp", nullable = false)
+    @Column(name = "createTimestamp", nullable = false, unique = true)
     @Temporal(TemporalType.TIMESTAMP)
     private Date createTimestamp;
 }
